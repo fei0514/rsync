@@ -1,0 +1,82 @@
+#!/bin/sh
+
+################################################################
+##################Setting job info for user ####################
+################################################################
+s_host="192.168.1.99" #remote IP
+s_mountpoit="/volumes/vol/test" #remote NFS mountpoint
+d_mountpoint="/rsync/test" #mount NFS on /rsync/test
+d_folder="tp/test" #TxS folder name 
+d_full_vol="/mnt/vol01" #destination full volume locate, volume ""mountpoint+volume"" Nexenta=/volumes , TrzeNAS=/mnt
+log_name="test" #This value is file name,rsync-"log_name".log
+########################################
+
+s_path="$d_mountpoint"
+d_path="$d_full_vol/$d_folder"
+log_path="$d_full_vol/jobs/log/rsync-$log_name.log"
+
+echo "`date` Rsync  Start" |tee -a $log_path
+echo "NFS server : $s_host:$s_mountpoit" >> $log_path
+echo "NFS mountpoint : $d_mountpoint" >> $log_path
+echo "TxS folder : $d_folder" >> $log_path
+
+
+##auto create mountpoint folder
+if [ -e $d_mountpoint ] ;then
+	echo "$d_mountpoint is exist" >> $log_path
+else
+	echo "Create folder $d_mountpoint" >> $log_path
+	mkdir -p $d_mountpoint
+fi
+
+if [ -e $d_path ] ; then
+	echo " $d_path is exist " >> $log_path
+else
+	echo "Can not find folder ($d_path ) "
+##auto create zfs folder , version 0915 is disable	
+#	echo "Create zfs folder $d_path"
+#	zfs create -o casesensitivity=sensitive vol/test
+fi
+
+#check mountpoint used or not
+chk_mp=`df -h |grep "$d_mountpoint" | awk '{print $6}'`
+if [ "$chk_mp" == "$d_mountpoint" ] ;then
+	echo "TrzeNAS mountpoint $d_mountpoint has been used " |tee -a $log_path
+else
+	mount -r -v $s_host:$s_mountpoit $d_mountpoint >> $log_path
+fi
+
+
+#mount NFS
+
+chk_mount=`df -h |grep "$s_host:$s_mountpoit" |awk '{print $1}'`
+if [ "$chk_mount" == "$s_host:$s_mountpoit" ];then
+	echo "mount NFS success" |tee -a $log_path
+else
+	echo "mount NFS fail,rsync job STOP" |tee -a $log_path
+	echo "`date`  Rsync Done" |tee -a $log_path
+	echo "" >> $log_path 
+	echo "" >> $log_path 
+	#echo "rsync job STOP" |tee -a $log_path
+	exit 1
+fi
+#rsync job
+/usr/local/bin/rsync -aWv --delete $s_path/ $d_path |tee -a $log_path
+
+##umount NFS 
+umount -f $d_mountpoint
+chk_umount=`df -h |grep "$s_host:$s_mountpoit" |awk '{print $1}'`
+if [ "$chk_umount" != "$s_host:$s_mountpoit" ];then
+	echo "umount NFS success" |tee -a $log_path
+fi
+
+
+echo "`date`  Rsync Done" |tee -a $log_path
+echo "" >> $log_path 
+echo "" >> $log_path 
+
+#20151021 update list
+#rsync optione ,remove -ogp ,add -v --delete
+#20151006 update list
+#1. mkdir $d_mountpoint -> mkdir -p $d_mountpoint
+#2. modify mount NFS for fail ,add echo "`date`  Rsync Done" |tee -a $log_path
