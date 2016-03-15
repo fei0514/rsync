@@ -20,6 +20,12 @@ echo "NFS server : $s_host:$s_mountpoit" >> $log_path
 echo "NFS mountpoint : $d_mountpoint" >> $log_path
 echo "TxS folder : $d_folder" >> $log_path
 
+#detect job status
+run=`ps -auxw |grep -i "$log_name" |grep -v grep |grep "/bin/rsync" |wc -l`
+if [ "$run" -ne 0 ]; then
+        echo "`date` $folder_name Rsync JOB is Running , new job is Stopping" |tee -a $log_path
+        exit 0
+fi
 
 ##auto create mountpoint folder
 if [ -e $d_mountpoint ] ;then
