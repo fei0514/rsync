@@ -14,6 +14,7 @@ log_name="test" #This value is file name,rsync-"log_name".log
 s_path="$d_mountpoint"
 d_path="$d_full_vol/$d_folder"
 log_path="$d_full_vol/jobs/log/rsync-$log_name.log"
+rsync_log="$d_full_vol/jobs/log/rsync-detail/$log_name-`date +%m%d`.log"
 
 echo "`date` Rsync  Start" |tee -a $log_path
 echo "NFS server : $s_host:$s_mountpoit" >> $log_path
@@ -25,6 +26,13 @@ run=`ps -auxw |grep -i "$log_name" |grep -v grep |grep "/bin/rsync" |wc -l`
 if [ "$run" -ne 0 ]; then
         echo "`date` $folder_name Rsync JOB is Running , new job is Stopping" |tee -a $log_path
         exit 0
+fi
+
+#檢查log folder是否存在
+if [ -e $d_full_vol/jobs/log/rysnc-detail ]; then
+	echo ""
+else
+	mkdir -p $d_full_vol/jobs/log/rsync-detail
 fi
 
 ##auto create mountpoint folder
@@ -67,7 +75,7 @@ else
 	exit 1
 fi
 #rsync job
-/usr/local/bin/rsync -aWv --delete $s_path/ $d_path |tee -a $log_path
+/usr/local/bin/rsync -aW --delete --log-file=$rsync_log $s_path/ $d_path |tee -a $log_path
 
 ##umount NFS 
 umount -f $d_mountpoint
