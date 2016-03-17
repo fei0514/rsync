@@ -1,0 +1,8 @@
+
+1.排除
+--exclude=pattern
+
+mountpoint=/rsync/test
+欲排除目錄=/rsync/test/share/
+
+rsync -aW --exclude="share/"   
