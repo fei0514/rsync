@@ -14,7 +14,7 @@ log_name="test" #This value is file name,rsync-"log_name".log
 s_path="$d_mountpoint"
 d_path="$d_full_vol/$d_folder"
 log_path="$d_full_vol/jobs/log/rsync-$log_name.log"
-rsync_log="$d_full_vol/jobs/log/rsync-detail/$log_name-`date +%m%d`.log"
+rsync_log="$d_full_vol/jobs/log/rsync-detail/$log_name-`date +%Y%m%d`.log"
 
 echo "`date` Rsync  Start" |tee -a $log_path
 echo "NFS server : $s_host:$s_mountpoit" >> $log_path
