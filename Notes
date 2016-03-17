@@ -8,3 +8,9 @@ mountpoint=/rsync/test
 
 排除多個
 rsync -aW --exclude="share/" --exclude="share2/" <source> <destination>
+
+
+2.rsync error: some files/attrs were not transferred (see previous errors) (code 23) 
+原因:filesystem不相容
+解法:用exclude來排除。
+參考網址:http://unix.stackexchange.com/a/72276
